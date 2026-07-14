@@ -1,0 +1,168 @@
+import java.util.Random;   // Подключаем генератор случайных чисел (как бросить кубик)
+import java.util.Scanner;   // Подключаем сканер,вводимых игроком значений
+
+public class Main {
+    public static void main(String[] args) {
+        // Эмодзи замка (специальный код символа)
+        String castle = "\uD83C\uDFF0";
+
+        // Размер игрового поля: 5 на 5 клеток
+        int sizeBoard = 5;
+
+        // Создаём героя (достаём фигурку из коробки и ставим на поле ;)
+        Person person = new Person(sizeBoard);
+
+        // Счётчик сделанных ходов
+        int step = 0;
+
+        // Создаём игровое поле — это таблица из строк (клеток)
+        // board[y][x] значит: строка y, столбец x
+        String[][] board = new String[sizeBoard][sizeBoard];
+
+        // Заполняем всё поле пробелами — то есть делаем все клетки пустыми
+        for (int y = 0; y < sizeBoard; y++) {          // идём по строкам сверху вниз
+            for (int x = 0; x < sizeBoard; x++) {      // идём по столбцам слева направо
+                board[y][x] = "  ";                     // в каждую клетку ставим два пробела (пустота)
+            }
+        }
+
+        // Считаем, сколько монстров нужно расставить
+        // Общее число клеток минус немного места для героя и замка
+        int countMonster = sizeBoard * sizeBoard - sizeBoard - 5;
+
+        // Генератор случайных чисел (наш «кубик»)
+        Random r = new Random();
+
+        // Массив (полка), где будем хранить всех монстров, чтобы потом их проверять
+        Monster[] arrMonster = new Monster[countMonster + 1];
+
+        int count = 0;              // счётчик уже расставленных монстров
+        Monster test;               // временная переменная: сюда кладём очередного монстра
+
+        // Расставляем монстров, пока не наберём нужное количество
+        while (count <= countMonster) {
+            // Случайный выбор: true или false (примерно 50 на 50)
+            if (r.nextBoolean()) {
+                test = new Monster(sizeBoard);      // обычный монстр
+            } else {
+                test = new BigMonster(sizeBoard);   // большой монстр
+            }
+
+            // Проверяем, свободна ли клетка, куда хотим поставить монстра
+            if (board[test.getY()][test.getX()].equals("  ")) {
+                // Если клетка пустая — ставим туда картинку монстра
+                board[test.getY()][test.getX()] = test.getImage();
+                arrMonster[count] = test;           // запоминаем монстра на нашей «полке»
+                count++;                            // увеличиваем счётчик расставленных монстров
+            }
+            // Если клетка занята — ничего не делаем и пробуем снова в следующем круге цикла
+        }
+
+        // Замок ставим в случайную клетку в верхней строке (y = 0)
+        int castleX = r.nextInt(sizeBoard); // случайное число от 0 до 4 (номер столбца)
+        int castleY = 0;                    // всегда верхняя строка
+
+        board[castleY][castleX] = castle;   // ставим замок на поле
+
+        // Спрашиваем игрока, хочет ли он играть
+        System.out.println("Привет! Ты готов начать играть в игру? (Напиши: ДА или НЕТ)");
+
+        Scanner sc = new Scanner(System.in);   // «микрофон» программы: слушает ввод с клавиатуры
+        String answer = sc.nextLine();         // читаем всю строку, которую написал игрок
+        System.out.println("Ваш ответ:\t" + answer);
+
+        // Приводим ответ к удобному виду:
+        // trim() убирает лишние пробелы по краям (чтобы " ДА " сработало)
+        // toLowerCase() делает все буквы маленькими (чтобы "ДА", "Да" стали "да")
+        String normalized = answer.trim().toLowerCase();
+
+        // Смотрим, что написал игрок, и действуем по вариантам
+        switch (normalized) {
+            case "да" -> {
+                System.out.println("Добро пожаловать в игру `В гостях у сказки`");
+                System.out.println("Ваша задача — добраться до Замка(" + "\uD83C\uDFF0"
+                        + "), победив монстров на пути");
+                System.out.println("Выбери сложность игры (от 1 до 5):");
+
+                int difficultGame = sc.nextInt();   // читаем число — уровень сложности
+                System.out.println("Выбранная сложность:\t" + difficultGame);
+
+                // Игровой цикл: крутится, пока мы сами не остановим (например, победой)
+                while (true) {
+                    // Ставим картинку героя на его текущую клетку
+                    board[person.getY() - 1][person.getX() - 1] = person.getImage();
+
+                    // Рисуем игровое поле и показываем, сколько жизней осталось
+                    outputBoard(board, person.getLive());
+
+                    System.out.println("Введите, куда будет ходить персонаж (ход возможен только по вертикали и горизонтали на одну клетку)"
+                            + "\nКоординаты персонажа - (x: " + person.getX() + ", y: " + person.getY() + "))");
+
+                    int x = sc.nextInt();   // игрок вводит координату X (столбец)
+                    int y = sc.nextInt();   // игрок вводит координату Y (строка)
+
+                    // Сначала проверяем, можно ли вообще пойти в эти координаты
+                    if (person.moveCorrect(x, y)) {
+                        // Узнаём, что находится в клетке, куда хочет пойти герой
+                        String next = board[y - 1][x - 1];
+
+                        if (next.equals("  ")) {
+                            // Клетка пустая — можно ходить
+                            board[person.getY() - 1][person.getX() - 1] = "  "; // убираем героя со старой клетки
+                            person.move(x, y);                                   // двигаем героя на новую клетку
+                            step++;                                            // увеличиваем счётчик ходов
+                            System.out.println("Ход корректный; Новые координаты: " + person.getX() + ", " + person.getY()
+                                    + "\nХод номер: " + step);
+                        } else if (next.equals(castle)) {
+                            // Герой дошёл до замка — победа!
+                            System.out.println("Вы прошли игру!");
+                            break;   // выходим из цикла: игра окончена
+                        } else {
+                            // В клетке монстр — нужно сразиться
+                            for (Monster monster : arrMonster) {   // перебираем всех монстров
+                                if (monster.conflictPerson(x, y)) {   // проверяем, стоит ли этот монстр в клетке
+                                    if (monster.taskMonster(difficultGame)) {
+                                        // Герой победил монстра
+                                        board[person.getY() - 1][person.getX() - 1] = "  ";
+                                        person.move(x, y);   // герой идёт дальше
+                                    } else {
+                                        // Монстр победил героя — теряем одну жизнь
+                                        person.downLive();
+                                    }
+                                    break;   // дальше проверять монстров не нужно
+                                }
+                            }
+                        }
+                    } else {
+                        // Ход неправильный (например, по диагонали или за пределы поля)
+                        System.out.println("Некорректный ход");
+                    }
+                }
+            }
+            case "нет" -> System.out.println("Жаль, приходи ещё!");
+            default -> System.out.println("Данные введены некорректно");
+        }
+    }
+
+    // Метод, который рисует игровое поле как таблицу
+    static void outputBoard(String[][] board, int live) {
+        String leftBlock = "| ";   // левая граница клетки
+        String rightBlock = "|";   // правая граница клетки
+        // Верхняя/нижняя граница клетки (линия)
+        String wall = "+ —— + —— + —— + —— + —— +";
+
+        // Проходим по каждой строке поля
+        for (String[] raw : board) {
+            System.out.println(wall);   // рисуем линию сверху строки
+            // Проходим по каждой клетке в строке
+            for (String col : raw) {
+                System.out.print(leftBlock + col + " ");   // рисуем клетку с содержимым
+            }
+            System.out.println(rightBlock);   // правая вертикальная черта
+        }
+        System.out.println(wall);   // линия снизу поля
+
+        // Показываем, сколько жизней осталось у героя
+        System.out.println("Количество жизней:\t" + live + "\n");
+    }
+}
