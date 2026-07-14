@@ -50,8 +50,11 @@ public class Main {
         String answer = sc.nextLine();
         System.out.println("Ваш ответ:\t" + answer);
 
-        switch (answer) {
-            case "ДА" -> {
+       // Приводим к нижнему регистру — теперь "ДА", "Да", "дА" станут "да"
+        String normalized = answer.trim().toLowerCase();
+
+        switch (normalized) {
+            case "да" -> {
                 System.out.println("Добро пожаловать  в игру `В гостях у сказки`");
                 System.out.println("Ваша задача - добраться до Замка(" + "\uD83C\uDFF0"
                 +"), победив монстров на пути");
@@ -97,7 +100,7 @@ public class Main {
                     }
                 }
             }
-            case "НЕТ" -> System.out.println("Жаль, приходи еще!");
+            case "нет" -> System.out.println("Жаль, приходи еще!");
             default -> System.out.println("Данные введены неккоректно");
         }
 
