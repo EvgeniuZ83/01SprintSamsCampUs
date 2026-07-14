@@ -53,7 +53,8 @@ public class Main {
         switch (answer) {
             case "ДА" -> {
                 System.out.println("Добро пожаловать  в игру `В гостях у сказки`");
-                System.out.println("Ваша задача - добраться до Замка, победив монстров на пути");
+                System.out.println("Ваша задача - добраться до Замка(" + "\uD83C\uDFF0"
+                +"), победив монстров на пути");
                 System.out.println("Выбери сложность игры(от 1 до 5):");
                 int difficultGame = sc.nextInt();
                 System.out.println("Выбранная сложность:\t" + difficultGame);
